@@ -22,3 +22,26 @@ class ClassSerializer(serializers.ModelSerializer):
                 if current_attendent > data['capacity']:
                     raise serializers.ValidationError(f"Capacity cannot be less than the current attendance ({current_attendent}).")
         return data
+    
+
+class AssignmentSerializer(serializers.ModelSerializer):
+    
+    for_class = serializers.StringRelatedField()
+    
+    class Meta:
+        model = Assignment
+        exclude = ["id"]
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+
+    soal = serializers.StringRelatedField()
+    class Meta:
+        model = Question
+        exclude = ['id']
+
+
+class ScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scores
+        exclude = ['id']
