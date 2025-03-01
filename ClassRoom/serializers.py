@@ -45,3 +45,43 @@ class ScoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scores
         exclude = ['id']
+
+
+
+
+
+
+
+
+class ClassViewSer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Classes
+        fields = '__all__'
+
+class ClassDetailSer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Classes
+        fields = ['shenase', 'name', 'description', 'permision', 'password']
+        lookup_field = 'shenase'
+
+
+class JoinClassSer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassRoles
+        fields = ['id', 'kelas', 'user', 'role']
+        read_only_fields = ['id', 'kelas', 'user', 'role']
+
+    
+        def validate(self, data):
+            class_instance = self.context['class_instance']  
+            
+            if class_instance.permision == 'pri':
+                provided_password = data.get('password')
+                if not provided_password or provided_password != class_instance.password:
+                    raise serializers.ValidationError({"password": "Incorrect class password."})
+
+            data.pop('password', None) 
+            return data
+

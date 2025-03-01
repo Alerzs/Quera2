@@ -39,10 +39,13 @@ class Classes(models.Model):
     permision = models.CharField(max_length=3 ,choices=PERMISION_CHOICE)
     password = models.CharField(max_length=20, default=None , blank=True ,null=True)
     join_time = models.DateTimeField(blank=True , null=True)
-    forum = models.OneToOneField(Forum ,on_delete=models.CASCADE)
+    forum = models.OneToOneField(Forum ,on_delete=models.CASCADE ,blank=True ,null=True)
 
     def __str__(self) -> str:
         return self.name
+
+    def is_owner(self ,user):
+        return ClassRoles.objects.filter(user=user ,role='O').exists()
 
     def attendent(self):
         return ClassRoles.objects.filter(kelas=self).aggregate(attend=Count("user",filter=Q(role='S')))["attend"]

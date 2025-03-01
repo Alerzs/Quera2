@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    'Classroom',
+    'ClassRoom',
     'Authentication',
     'Bank'
 
@@ -132,4 +132,4 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 5
 }
 
-AUTH_USER_MODEL = 'auth_user.QueraUser'
+AUTH_USER_MODEL = 'Authentication.QueraUser'
