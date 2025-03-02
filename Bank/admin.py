@@ -4,9 +4,6 @@ from .models import Soal ,SubmitedAnswer
 @admin.register(Soal)
 class SoalAdmin(admin.ModelAdmin):
     list_display = ('name', 'creator', 'category', 'level', 'answer_type')
-    list_filter = ('level', 'answer_type', 'category')
-    search_fields = ('name', 'category', 'creator__username')
-    readonly_fields = ('creator',)
 
 
 @admin.register(SubmitedAnswer)

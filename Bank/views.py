@@ -1,6 +1,8 @@
 from .models import *
 from Bank.models import *
 from Authentication.models import *
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics , filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated , IsAdminUser ,AllowAny
@@ -12,27 +14,27 @@ import requests
 from .serializers import *
 
 
-class SoalView(APIView):
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated()]
-        if self.request.method == 'GET':
-            return [AllowAny()]
-    
-    def post(self ,request):
-        serializer = SoalSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get(self ,request):
-        soals = Soal.objects.all()
-        serializer = SoalSerializer(soals,many=True)
-        return Response(serializer.data ,status=status.HTTP_200_OK)   
-    
+class SoalView(generics.ListCreateAPIView):
+    queryset = Soal.objects.all()
+    serializer_class = SoalSerializer
 
-# class SoalDetails(APIView):--------------------------------------------------------------------
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        elif self.request.method == "GET":
+            return [AllowAny()]
+        return super(SoalView, self).get_permissions()
+
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['name', 'level', 'category', 'answer_type']
+    ordering_fields = ['name', 'level', 'category', 'answer_type']
+
+
+class SoalDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Soal.objects.all()
+    serializer_class = SoalSerializer
+
+
 class Solve(APIView):
     permission_classes = [IsAuthenticated]
     def post(self ,request):
