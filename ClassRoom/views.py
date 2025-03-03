@@ -19,7 +19,6 @@ from Bank.serializers import SubmitionSerializer
 from Bank.serializers import SoalSerializer
 
 
-
 class Classview(generics.ListCreateAPIView):
     queryset = Classes.objects.all()
     serializer_class = ClassViewSer
@@ -60,7 +59,6 @@ class JoinClass(generics.CreateAPIView):
 
         class_instance = get_object_or_404(Classes, shenase=shenase)
         serializer = self.get_serializer(data=request.data, context={'class_instance': class_instance})
-
         if serializer.is_valid():
             if ClassRoles.objects.filter(kelas=class_instance, user=self.request.user).exists():
                 raise serializers.ValidationError({"error": "User is already a member of this class."})
@@ -70,25 +68,24 @@ class JoinClass(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-class JoinClassByInvitation(APIView):
+class JoinClassByInvitation(generics.RetrieveAPIView):
+    queryset = Invite.objects.all()
+    serializer_class = InviteSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'invite_id'
 
-    def get(self ,request ,invite_id):
-        my_user = request.user
-        try:
-            my_invite = Invite.objects.get(invite_id=invite_id)
-        except:
-            return Response('invite id is wrong or expired' ,status=status.HTTP_404_NOT_FOUND)
-        if my_invite.reciver != my_user:
-            return Response('this link is not valid on your account' ,status=status.HTTP_403_FORBIDDEN)
-        my_class = my_invite.target_class
-        my_forum = my_class.forum
-        my_forum.participents.add(my_user)    
-        ClassRoles.objects.create(kelas=my_class ,user=my_user ,role='S')
-        my_forum.save()
-        my_invite.delete()
-        return Response('you joined the class successfully' ,status=status.HTTP_200_OK)
+    def retrieve(self, request, *args, **kwargs):
+        invite = self.get_object()
+        
+        if request.user != invite.reciver:
+            return Response({'error': 'You are not authorized to accept this invite.'}, status=403)
+        class_role, created = ClassRoles.objects.get_or_create(user=request.user,kelas=invite.target_class,defaults={'role': 'S'})
+        if created:
+            invite.delete()
+            return Response({'message': 'You have successfully joined the class.'})
+        else:
+            return Response({'message': 'You are already a member of this class.'})
+
 
 class SendInvitation(APIView):
     permission_classes = [IsAuthenticated]

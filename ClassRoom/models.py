@@ -78,7 +78,7 @@ class ClassRoles(models.Model):
 
 class Question(models.Model):
 
-    soal = models.ForeignKey(Soal ,on_delete=models.CASCADE)#---------------az soal
+    soal = models.ForeignKey(Soal ,on_delete=models.CASCADE)
     deadline = models.DateTimeField()
     send_limit = models.PositiveSmallIntegerField()
     mark = models.PositiveSmallIntegerField()

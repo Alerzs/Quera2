@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Classes ,ClassRoles ,Assignment ,Question ,Team ,Scores
+from .models import Classes ,ClassRoles ,Assignment ,Question ,Team ,Scores ,Invite
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -85,3 +85,8 @@ class JoinClassSer(serializers.ModelSerializer):
             data.pop('password', None) 
             return data
 
+
+class InviteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invite
+        fields = '__all__'
