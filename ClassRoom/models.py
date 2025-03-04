@@ -44,8 +44,11 @@ class Classes(models.Model):
     def __str__(self) -> str:
         return self.name
 
-    def is_owner(self ,user):
+    def is_owner(self, user):
         return ClassRoles.objects.filter(user=user ,role='O').exists()
+
+    def is_teacher_or_mentor(self, user):
+        return ClassRoles.objects.filter(user=user ,role='T'or'M').exists()
 
     def attendent(self):
         return ClassRoles.objects.filter(kelas=self).aggregate(attend=Count("user",filter=Q(role='S')))["attend"]
@@ -53,7 +56,6 @@ class Classes(models.Model):
     def clean(self) -> None:
         if self.permision == 'pub' and self.password:
             raise ValidationError('password must be blank when the class permision is public')
-        
         if self.permision == 'per' and not self.password:
             raise ValidationError('classes with  privet permision must have a password')
         

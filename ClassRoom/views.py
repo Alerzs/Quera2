@@ -136,37 +136,39 @@ class ChatBox(APIView):
         return Response('you dont have access to the selected chatroom' ,status=status.HTTP_403_FORBIDDEN)
 
 
-class AssignmentView(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self ,request ,shenase):
-        name = request.data.get("name")
-        contribution_type = request.data.get("contribution_type")
-        marking_type = request.data.get("marking_type")
-        if not name or not contribution_type or not marking_type:
-            return Response("name , contribution_type and marking_type are required ")
-        my_user = request.user
-        my_class = get_object_or_404(Classes ,shenase=shenase)
-        try:
-            if ClassRoles.objects.get(user=my_user, kelas=my_class).role == 'S':
-                return Response("students dont have permission to add assignment",status=status.HTTP_403_FORBIDDEN)
-        except:
-            return Response("no permissions" ,status=status.HTTP_403_FORBIDDEN)
+# class AssignmentView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def post(self ,request ,shenase):
+#         name = request.data.get("name")
+#         contribution_type = request.data.get("contribution_type")
+#         marking_type = request.data.get("marking_type")
+#         if not name or not contribution_type or not marking_type:
+#             return Response("name , contribution_type and marking_type are required ")
+#         my_user = request.user
+#         my_class = get_object_or_404(Classes ,shenase=shenase)
+#         try:
+#             if ClassRoles.objects.get(user=my_user, kelas=my_class).role == 'S':
+#                 return Response("students dont have permission to add assignment",status=status.HTTP_403_FORBIDDEN)
+#         except:
+#             return Response("no permissions" ,status=status.HTTP_403_FORBIDDEN)
         
-        Assignment.objects.create(name=name,contribution_type=contribution_type,marking_type=marking_type,for_class=my_class)
-        return Response("assignment added",status=status.HTTP_201_CREATED)
+#         Assignment.objects.create(name=name,contribution_type=contribution_type,marking_type=marking_type,for_class=my_class)
+#         return Response("assignment added",status=status.HTTP_201_CREATED)
         
-    def get(self ,request ,shenase):
-        my_user = request.user
-        my_class = get_object_or_404(Classes ,shenase=shenase)
-        try:
-            ClassRoles.objects.get(user=my_user, kelas=my_class)
-        except:
-            return Response("no permissions" ,status=status.HTTP_403_FORBIDDEN)
-        
-        assignemnts = Assignment.objects.filter(for_class=my_class)
-        serializer = AssignmentSerializer(assignemnts ,many=True)
-        return Response(serializer.data ,status=status.HTTP_200_OK)
+#     def get(self ,request ,shenase):
+#         my_user = request.user
+#         my_class = get_object_or_404(Classes ,shenase=shenase)
+#         try:
+#             ClassRoles.objects.get(user=my_user, kelas=my_class)
+#         except:
+#             return Response("no permissions" ,status=status.HTTP_403_FORBIDDEN)
+#         assignemnts = Assignment.objects.filter(for_class=my_class)
+#         serializer = AssignmentSerializer(assignemnts ,many=True)
+#         return Response(serializer.data ,status=status.HTTP_200_OK)
     
+class AssignmentView(generics.ListCreateAPIView):
+    pass
+
 
 class AddGroup(APIView):
     permission_classes = [IsAuthenticated]
