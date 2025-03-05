@@ -26,12 +26,10 @@ class ClassSerializer(serializers.ModelSerializer):
 
 class AssignmentSerializer(serializers.ModelSerializer):
     
-    for_class = serializers.StringRelatedField()
-    
     class Meta:
         model = Assignment
         exclude = ["id"]
-
+        read_only_fields = ['for_class']
 
 class QuestionSerializer(serializers.ModelSerializer):
 

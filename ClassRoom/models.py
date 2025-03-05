@@ -50,6 +50,9 @@ class Classes(models.Model):
     def is_teacher_or_mentor(self, user):
         return ClassRoles.objects.filter(user=user ,role='T'or'M').exists()
 
+    def is_member(self, user):
+        return ClassRoles.objects.filter(user=user ,role='T'or'M'or'S').exists()
+
     def attendent(self):
         return ClassRoles.objects.filter(kelas=self).aggregate(attend=Count("user",filter=Q(role='S')))["attend"]
 

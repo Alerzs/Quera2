@@ -4,7 +4,7 @@ import random
 from django.db import transaction
 import requests
 import json
-from .permisions import IsClassOwner
+from .permisions import *
 from Bank.models import Soal
 from Bank.models import *
 from Authentication.models import *
@@ -76,7 +76,6 @@ class JoinClassByInvitation(generics.RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         invite = self.get_object()
-        
         if request.user != invite.reciver:
             return Response({'error': 'You are not authorized to accept this invite.'}, status=403)
         class_role, created = ClassRoles.objects.get_or_create(user=request.user,kelas=invite.target_class,defaults={'role': 'S'})
@@ -134,40 +133,24 @@ class ChatBox(APIView):
         if my_forum.participents.filter(id=my_user.id).exists():
             return Response(Message.objects.filter(room=my_forum).order_by("send_time").values_list("sender__username","text","send_time") ,status=status.HTTP_200_OK)
         return Response('you dont have access to the selected chatroom' ,status=status.HTTP_403_FORBIDDEN)
-
-
-# class AssignmentView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def post(self ,request ,shenase):
-#         name = request.data.get("name")
-#         contribution_type = request.data.get("contribution_type")
-#         marking_type = request.data.get("marking_type")
-#         if not name or not contribution_type or not marking_type:
-#             return Response("name , contribution_type and marking_type are required ")
-#         my_user = request.user
-#         my_class = get_object_or_404(Classes ,shenase=shenase)
-#         try:
-#             if ClassRoles.objects.get(user=my_user, kelas=my_class).role == 'S':
-#                 return Response("students dont have permission to add assignment",status=status.HTTP_403_FORBIDDEN)
-#         except:
-#             return Response("no permissions" ,status=status.HTTP_403_FORBIDDEN)
-        
-#         Assignment.objects.create(name=name,contribution_type=contribution_type,marking_type=marking_type,for_class=my_class)
-#         return Response("assignment added",status=status.HTTP_201_CREATED)
-        
-#     def get(self ,request ,shenase):
-#         my_user = request.user
-#         my_class = get_object_or_404(Classes ,shenase=shenase)
-#         try:
-#             ClassRoles.objects.get(user=my_user, kelas=my_class)
-#         except:
-#             return Response("no permissions" ,status=status.HTTP_403_FORBIDDEN)
-#         assignemnts = Assignment.objects.filter(for_class=my_class)
-#         serializer = AssignmentSerializer(assignemnts ,many=True)
-#         return Response(serializer.data ,status=status.HTTP_200_OK)
     
+
 class AssignmentView(generics.ListCreateAPIView):
-    pass
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentSerializer
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [IsAuthenticated(),IsClassOwner(),IsClassTeacherOrMentor()]
+        elif self.request.method == "GET":
+            return [IsAuthenticated(),IsClassMember()]
+        return super(AssignmentView, self).get_permissions()
+
+    def perform_create(self, serializer):
+        classroom_id = self.kwargs.get('shenase')
+        classroom = get_object_or_404(Classes, shenase=classroom_id)
+        serializer.save(for_class=classroom)
+
 
 
 class AddGroup(APIView):
