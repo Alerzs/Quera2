@@ -141,7 +141,7 @@ class AssignmentView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == "POST":
-            return [IsAuthenticated(),IsClassOwner(),IsClassTeacherOrMentor()]
+            return [IsAuthenticated(),IsClassTeacherOrMentor()]
         elif self.request.method == "GET":
             return [IsAuthenticated(),IsClassMember()]
         return super(AssignmentView, self).get_permissions()
@@ -153,68 +153,80 @@ class AssignmentView(generics.ListCreateAPIView):
 
 
 
-class AddGroup(APIView):
-    permission_classes = [IsAuthenticated]
-    def patch(self ,request ,shenase):
-        group_list = request.data.get('group_list',[])
-        assignment_id = request.data.get('assignment_id')
-        number_of_random_groups = request.data.get('number_of_random_groups')
+# class AddGroup(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def patch(self ,request ,shenase):
+#         group_list = request.data.get('group_list',[])
+#         assignment_id = request.data.get('assignment_id')
+#         number_of_random_groups = request.data.get('number_of_random_groups')
 
-        my_assignment = get_object_or_404(Assignment, id=assignment_id)
-        my_user = request.user
-        my_class = get_object_or_404(Classes ,shenase=shenase)
+#         my_assignment = get_object_or_404(Assignment, id=assignment_id)
+#         my_user = request.user
+#         my_class = get_object_or_404(Classes ,shenase=shenase)
 
-        if my_assignment.contribution_type == "I":
-            return Response("creating groups is not allowed in individual contribution type", status=status.HTTP_400_BAD_REQUEST)
-        if len(group_list) > 10:
-            return Response('maximum number of groups is 10' ,status=status.HTTP_400_BAD_REQUEST)
-        if my_assignment.for_class != my_class:
-            return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-        try:
-            if ClassRoles.objects.get(user=my_user ,kelas=my_class).role == 'S':
-                return Response("students dont have permission to add group",status=status.HTTP_403_FORBIDDEN)
-        except:
-            return Response("no permission", status=status.HTTP_403_FORBIDDEN)
+#         if my_assignment.contribution_type == "I":
+#             return Response("creating groups is not allowed in individual contribution type", status=status.HTTP_400_BAD_REQUEST)
+#         if len(group_list) > 10:
+#             return Response('maximum number of groups is 10' ,status=status.HTTP_400_BAD_REQUEST)
+#         if my_assignment.for_class != my_class:
+#             return Response("no permission", status=status.HTTP_403_FORBIDDEN)
+#         try:
+#             if ClassRoles.objects.get(user=my_user ,kelas=my_class).role == 'S':
+#                 return Response("students dont have permission to add group",status=status.HTTP_403_FORBIDDEN)
+#         except:
+#             return Response("no permission", status=status.HTTP_403_FORBIDDEN)
         
-        if number_of_random_groups:
-            attendence = ClassRoles.objects.filter(kelas=my_class,role='S')
-            if len(attendence) < 2 * number_of_random_groups:
-                return Response("each grop must have at least 2 members", status=status.HTTP_400_BAD_REQUEST)
-            for _ in range(number_of_random_groups):
-                std = random.sample(list(attendence),k=len(attendence)//number_of_random_groups)
-                my_team = Team.objects.create()
-                for item in std:
-                    my_team.members.add(item.user)
-                    attendence = attendence.exclude(id=item.pk)
-                my_assignment.teams.set(my_team)
-                number_of_random_groups -= 1
-            return Response("group was created" ,status=status.HTTP_201_CREATED)
+#         if number_of_random_groups:
+#             attendence = ClassRoles.objects.filter(kelas=my_class,role='S')
+#             if len(attendence) < 2 * number_of_random_groups:
+#                 return Response("each grop must have at least 2 members", status=status.HTTP_400_BAD_REQUEST)
+#             for _ in range(number_of_random_groups):
+#                 std = random.sample(list(attendence),k=len(attendence)//number_of_random_groups)
+#                 my_team = Team.objects.create()
+#                 for item in std:
+#                     my_team.members.add(item.user)
+#                     attendence = attendence.exclude(id=item.pk)
+#                 my_assignment.teams.set(my_team)
+#                 number_of_random_groups -= 1
+#             return Response("group was created" ,status=status.HTTP_201_CREATED)
         
-        combined_lists = [item for lst in group_list for item in lst]
-        seen = set()
-        duplicates = set()
-        try:
-            for value in combined_lists:
-                if not ClassRoles.objects.filter(user=QueraUser.objects.get(id=value),kelas=my_class,role='S').exists():
-                    return Response(f"user {value} is not student of {my_class.name}")
-                if value in seen:
-                    duplicates.add(value)
-                else:
-                    seen.add(value)
-            if duplicates:
-                return Response({"Duplicate values found.": list(duplicates)})
-        except:
-            return Response(f"no user found with {value} value", status=status.HTTP_400_BAD_REQUEST)
+#         combined_lists = [item for lst in group_list for item in lst]
+#         seen = set()
+#         duplicates = set()
+#         try:
+#             for value in combined_lists:
+#                 if not ClassRoles.objects.filter(user=QueraUser.objects.get(id=value),kelas=my_class,role='S').exists():
+#                     return Response(f"user {value} is not student of {my_class.name}")
+#                 if value in seen:
+#                     duplicates.add(value)
+#                 else:
+#                     seen.add(value)
+#             if duplicates:
+#                 return Response({"Duplicate values found.": list(duplicates)})
+#         except:
+#             return Response(f"no user found with {value} value", status=status.HTTP_400_BAD_REQUEST)
 
-        my_assignment.teams.clear()
-        for team in group_list:
-            my_team = Team.objects.create()
-            students = QueraUser.objects.filter(id__in=team)
-            my_assignment.teams.add(my_team.members.add(*students))
-            my_assignment.save()
-            my_team.save()
-        return Response("group was created" ,status=status.HTTP_201_CREATED)
+#         my_assignment.teams.clear()
+#         for team in group_list:
+#             my_team = Team.objects.create()
+#             students = QueraUser.objects.filter(id__in=team)
+#             my_assignment.teams.add(my_team.members.add(*students))
+#             my_assignment.save()
+#             my_team.save()
+#         return Response("group was created" ,status=status.HTTP_201_CREATED)
     
+
+class AddGroup(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated,IsClassTeacherOrMentor]
+    serializer_class = TeamSerializer
+    queryset = Team.objects.all()
+
+    def perform_create(self, serializer):
+        classroom_id = self.kwargs.get('shenase')
+        classroom = get_object_or_404(Classes, shenase=classroom_id)
+        
+
+
 
 
 class AddQuestionFromBank(APIView):

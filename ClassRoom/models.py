@@ -99,13 +99,6 @@ class Scores(models.Model):
     taken_mark = models.PositiveSmallIntegerField()
 
 
-class Team(models.Model):
-    members = models.ManyToManyField(QueraUser)
-
-    def __str__(self) -> str:
-        return ", ".join(member.username for member in self.members.all())
-
-
 class Assignment(models.Model):
 
     CONTRIB_CHOICE =[
@@ -120,7 +113,6 @@ class Assignment(models.Model):
     name = models.CharField(max_length=25)
     contribution_type = models.CharField(max_length=1 ,choices=CONTRIB_CHOICE)
     marking_type = models.CharField(max_length=1 ,choices=MARKING_CHOICE)
-    teams = models.ManyToManyField(Team)
     questions = models.ManyToManyField(Question)
     for_class = models.ForeignKey(Classes ,on_delete=models.CASCADE)
     
@@ -135,6 +127,13 @@ class Assignment(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
+
+class Team(models.Model):
+    members = models.ManyToManyField(QueraUser)
+    asignment = models.ForeignKey(Assignment)
+    def __str__(self) -> str:
+        return ", ".join(member.username for member in self.members.all())
+    
 
 class Invite(models.Model):
     

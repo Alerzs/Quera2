@@ -45,10 +45,10 @@ class ScoreSerializer(serializers.ModelSerializer):
         exclude = ['id']
 
 
-
-
-
-
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = '__all__'
 
 
 class ClassViewSer(serializers.ModelSerializer):
