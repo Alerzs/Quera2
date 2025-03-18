@@ -152,70 +152,6 @@ class AssignmentView(generics.ListCreateAPIView):
         serializer.save(for_class=classroom)
 
 
-
-# class AddGroup(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def patch(self ,request ,shenase):
-#         group_list = request.data.get('group_list',[])
-#         assignment_id = request.data.get('assignment_id')
-#         number_of_random_groups = request.data.get('number_of_random_groups')
-
-#         my_assignment = get_object_or_404(Assignment, id=assignment_id)
-#         my_user = request.user
-#         my_class = get_object_or_404(Classes ,shenase=shenase)
-
-#         if my_assignment.contribution_type == "I":
-#             return Response("creating groups is not allowed in individual contribution type", status=status.HTTP_400_BAD_REQUEST)
-#         if len(group_list) > 10:
-#             return Response('maximum number of groups is 10' ,status=status.HTTP_400_BAD_REQUEST)
-#         if my_assignment.for_class != my_class:
-#             return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-#         try:
-#             if ClassRoles.objects.get(user=my_user ,kelas=my_class).role == 'S':
-#                 return Response("students dont have permission to add group",status=status.HTTP_403_FORBIDDEN)
-#         except:
-#             return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-        
-#         if number_of_random_groups:
-#             attendence = ClassRoles.objects.filter(kelas=my_class,role='S')
-#             if len(attendence) < 2 * number_of_random_groups:
-#                 return Response("each grop must have at least 2 members", status=status.HTTP_400_BAD_REQUEST)
-#             for _ in range(number_of_random_groups):
-#                 std = random.sample(list(attendence),k=len(attendence)//number_of_random_groups)
-#                 my_team = Team.objects.create()
-#                 for item in std:
-#                     my_team.members.add(item.user)
-#                     attendence = attendence.exclude(id=item.pk)
-#                 my_assignment.teams.set(my_team)
-#                 number_of_random_groups -= 1
-#             return Response("group was created" ,status=status.HTTP_201_CREATED)
-        
-#         combined_lists = [item for lst in group_list for item in lst]
-#         seen = set()
-#         duplicates = set()
-#         try:
-#             for value in combined_lists:
-#                 if not ClassRoles.objects.filter(user=QueraUser.objects.get(id=value),kelas=my_class,role='S').exists():
-#                     return Response(f"user {value} is not student of {my_class.name}")
-#                 if value in seen:
-#                     duplicates.add(value)
-#                 else:
-#                     seen.add(value)
-#             if duplicates:
-#                 return Response({"Duplicate values found.": list(duplicates)})
-#         except:
-#             return Response(f"no user found with {value} value", status=status.HTTP_400_BAD_REQUEST)
-
-#         my_assignment.teams.clear()
-#         for team in group_list:
-#             my_team = Team.objects.create()
-#             students = QueraUser.objects.filter(id__in=team)
-#             my_assignment.teams.add(my_team.members.add(*students))
-#             my_assignment.save()
-#             my_team.save()
-#         return Response("group was created" ,status=status.HTTP_201_CREATED)
-    
-
 class AddGroup(generics.CreateAPIView):
     permission_classes = [IsAuthenticated,IsClassTeacherOrMentor]
     serializer_class = TeamSerializer
@@ -223,73 +159,23 @@ class AddGroup(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         classroom_id = self.kwargs.get('shenase')
-        classroom = get_object_or_404(Classes, shenase=classroom_id)
-        
+        assignment_id = self.kwargs.get('assignment_id')
+        assignment = get_object_or_404(Assignment, id=assignment_id, for_class__id=classroom_id)
+        serializer.save(assignment=assignment)
 
 
+class AddQuestionFromBank(generics.CreateAPIView):
+    queryset = Question.objects.all()
+    permission_classes = [IsAuthenticated, IsClassTeacherOrMentor]
+    serializer_class = QuestionSerializer
 
+    def perform_create(self, serializer):
+        classroom_id = self.kwargs.get('shenase')
+        assignment_id = self.kwargs.get('assignment_id')
+        assignment = get_object_or_404(Assignment, id=assignment_id, for_class__id=classroom_id)
+        my_question = serializer.save()
+        assignment.questions.add(my_question)    
 
-class AddQuestionFromBank(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self ,request ,shenase):
-        assignment_id = request.data.get('assignment_id')
-        question_id = request.data.get('question_id')
-        deadline = request.data.get('deadline')
-        send_limit = request.data.get('send_limit')
-        mark = request.data.get('mark')
-        late_penalty = request.data.get('late_penalty')
-
-        if not assignment_id or not question_id or not deadline or not send_limit or not mark or not late_penalty:
-            return Response("assignment_id , question_id , deadline , send_limit , mark and late_penalty are required")
-        my_assignment = get_object_or_404(Assignment, id=assignment_id)
-        my_soal =  get_object_or_404(Soal, id=question_id)
-        my_user = request.user
-        my_class = get_object_or_404(Classes ,shenase=shenase)
-
-        if my_assignment.for_class != my_class:
-            return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-        try:
-            if ClassRoles.objects.get(user=my_user ,kelas=my_class).role == 'S':
-                return Response("students dont have permission to add group",status=status.HTTP_403_FORBIDDEN)
-        except:
-            return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-        
-        my_question = my_assignment.questions.create(soal=my_soal,deadline=deadline,send_limit=send_limit,mark=mark,late_penalty=late_penalty)
-        serializer = QuestionSerializer(my_question)
-        return Response(serializer.data ,status=status.HTTP_201_CREATED)
-    
-
-class AddCreatedQuestion(APIView):
-    permission_classes = [IsAuthenticated]
-    def post(self ,request ,shenase):
-        assignment_id = request.data.get('assignment_id')
-        deadline = request.data.get('deadline')
-        send_limit = request.data.get('send_limit')
-        mark = request.data.get('mark')
-        late_penalty = request.data.get('late_penalty')
-
-        if not assignment_id or not deadline or not send_limit or not mark or not late_penalty:
-            return Response("assignment_id , deadline , send_limit , mark and late_penalty are required")
-        my_assignment = get_object_or_404(Assignment, id=assignment_id)
-         
-        my_user = request.user
-        my_class = get_object_or_404(Classes ,shenase=shenase)
-        serializer = SoalSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save() 
-            my_soal = serializer.instance
-            if my_assignment.for_class != my_class:
-                return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-            try:
-                if ClassRoles.objects.get(user=my_user ,kelas=my_class).role == 'S':
-                    return Response("students dont have permission to add group",status=status.HTTP_403_FORBIDDEN)
-            except:
-                return Response("no permission", status=status.HTTP_403_FORBIDDEN)
-            
-            my_question = my_assignment.questions.create(soal=my_soal,deadline=deadline,send_limit=send_limit,mark=mark,late_penalty=late_penalty)
-            serializer = QuestionSerializer(my_question)
-            return Response(serializer.data ,status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class QuestionView(APIView):

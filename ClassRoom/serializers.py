@@ -32,12 +32,9 @@ class AssignmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['for_class']
 
 class QuestionSerializer(serializers.ModelSerializer):
-
-    soal = serializers.StringRelatedField()
     class Meta:
         model = Question
-        exclude = ['id']
-
+        fields = '__all__'
 
 class ScoreSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,7 +45,8 @@ class ScoreSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
-        fields = '__all__'
+        fields = ['members']
+        read_only_fields = ['assignment']
 
 
 class ClassViewSer(serializers.ModelSerializer):

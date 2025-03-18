@@ -36,14 +36,14 @@ class ScoresAdmin(admin.ModelAdmin):
 
 @admin.register(Team)
 class GroupsAdmin(admin.ModelAdmin):
-    list_display = ('id',)
+    list_display = ('id','asignment')
     filter_horizontal = ('members',)
 
 
 @admin.register(Assignment)
 class AssignmentAdmin(admin.ModelAdmin):
     list_display = ('name', 'contribution_type', 'marking_type')
-    filter_horizontal = ('teams', 'questions')
+    filter_horizontal = ('questions',)
 
 
 @admin.register(Invite)

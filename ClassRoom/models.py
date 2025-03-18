@@ -118,19 +118,11 @@ class Assignment(models.Model):
     
     def __str__(self) -> str:
         return self.name
-    
-    def clean(self) -> None:
-        if self.contribution_type == 'I' and self.teams.exists():
-            raise ValidationError('teams are not allowed in individual contribution type')
-    
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
 
 class Team(models.Model):
     members = models.ManyToManyField(QueraUser)
-    asignment = models.ForeignKey(Assignment)
+    asignment = models.ForeignKey(Assignment ,on_delete=models.CASCADE)
     def __str__(self) -> str:
         return ", ".join(member.username for member in self.members.all())
     
